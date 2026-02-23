@@ -14,8 +14,8 @@ set_target_properties(onion_event PROPERTIES
 )
 
 # ---- Demo ----
-option(ONION_EVENT_BUILD_DEMO "Build Event demo" ON)
+option(ONION_BUILD_DEMO "Build Event demo" OFF)
 
-if (ONION_EVENT_BUILD_DEMO)
+if (ONION_BUILD_DEMO)
     add_subdirectory(demo)
 endif()

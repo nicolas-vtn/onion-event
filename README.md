@@ -54,12 +54,12 @@ event.Unsubscribe(handler);
 ---
 
 
-## Disable Tests
+## Disable Demo
 
-Disable tests:
+Disable demo:
 
 ```bash
-cmake -DONION_EVENT_BUILD_TESTS=OFF ..
+cmake -DONION_BUILD_DEMO=OFF ..
 ```
 
 ---
