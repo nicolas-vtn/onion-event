@@ -33,28 +33,28 @@ int main()
 
 	{
 		// Creates a lambda handler that captures the example instance by reference
-		onion::EventHandler eventHandler_1 =
+		onion::EventHandle eventHandle_1 =
 			event.Subscribe([&example](const ExampleEventArgs& args) { example.sayEventValue(args); });
 
 		// Create another handler that captures the example instance by reference
-		onion::EventHandler eventHandler_2 =
+		onion::EventHandle eventHandle_2 =
 			event.Subscribe([&example](const ExampleEventArgs& args) { example.sayEventValue(args); });
 
 		// Trigger the event with some arguments
 		std::cout << "\nTriggering event with value 100..." << std::endl;
 		event.Trigger(ExampleEventArgs(100));
 
-		// Unsubscribe the first handler
-		event.Unsubscribe(eventHandler_1);
+		// Unsubscribe the first handle
+		event.Unsubscribe(eventHandle_1);
 
-		// Trigger the event again to show that the first handler has been unsubscribed
-		std::cout << "\nTriggering event with value 150 after unsubscribing first handler..." << std::endl;
+		// Trigger the event again to show that the first handle has been unsubscribed
+		std::cout << "\nTriggering event with value 150 after unsubscribing first handle..." << std::endl;
 		event.Trigger(ExampleEventArgs(150));
 
-	} // The eventHandler goes out of scope here, automatically unsubscribing the handler
+	} // The eventHandle goes out of scope here, automatically unsubscribing the handle
 
-	// Trigger the event again to show that the handler has been unsubscribed
-	std::cout << "\nTriggering event with value 200 after handler has been unsubscribed ..." << std::endl;
+	// Trigger the event again to show that the handle has been unsubscribed
+	std::cout << "\nTriggering event with value 200 after handle has been unsubscribed ..." << std::endl;
 	event.Trigger(ExampleEventArgs(200));
 
 	return 0;

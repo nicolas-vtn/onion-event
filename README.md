@@ -37,7 +37,7 @@ target_link_libraries(your_target
 
 onion::Event<MyEventArgs> event;
 
-auto handler = event.Subscribe([](const MyEventArgs& args)
+auto handle = event.Subscribe([](const MyEventArgs& args)
 {
     std::cout << args.value << std::endl;
 });
@@ -45,9 +45,9 @@ auto handler = event.Subscribe([](const MyEventArgs& args)
 event.Trigger(MyEventArgs{42});
 
 // Optional manual unsubscribe
-event.Unsubscribe(handler);
+event.Unsubscribe(handle);
 
-// Or automatic unsubscribe when handler goes out of scope
+// Or automatic unsubscribe when handle goes out of scope
 ```
 
 
@@ -66,9 +66,9 @@ cmake -DONION_BUILD_DEMO=OFF ..
 
 ## Design Notes
 
-* Subscriptions are represented by `EventHandler` tokens.
+* Subscriptions are represented by `EventHandle` tokens.
 * When a token is destroyed, the associated handler is automatically ignored.
-* Expired handlers are cleaned up lazily.
+* Expired handles are cleaned up lazily.
 * Events can be stack-allocated.
 
 ---

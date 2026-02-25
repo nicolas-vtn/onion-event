@@ -9,26 +9,26 @@
 namespace onion
 {
 	/// @brief Represents a handle to an event subscription. Subscribed function won't be called anymore when the handle goes out of scope.
-	class EventHandler
+	class EventHandle
 	{
 	  public:
 		template <typename EventArgs> friend class Event;
 
 	  public:
-		EventHandler(const EventHandler&) = default;
-		EventHandler(EventHandler&&) noexcept = default;
-		EventHandler& operator=(const EventHandler&) = default;
-		EventHandler& operator=(EventHandler&&) noexcept = default;
+		EventHandle() = default;
+		EventHandle(const EventHandle&) = default;
+		EventHandle(EventHandle&&) noexcept = default;
+		EventHandle& operator=(const EventHandle&) = default;
+		EventHandle& operator=(EventHandle&&) noexcept = default;
 
 	  protected:
 		struct Token
 		{
 		};
-		EventHandler() = delete;
-		explicit EventHandler(std::shared_ptr<Token> handler) : m_handler(std::move(handler)) {}
+		explicit EventHandle(std::shared_ptr<Token> handle) : m_handle(std::move(handle)) {}
 
 	  private:
-		std::shared_ptr<Token> m_handler;
+		std::shared_ptr<Token> m_handle;
 	};
 
 	/// @brief Generic event class that allows subscribing to, unsubscribing from, and triggering events with specific argument types.
@@ -37,13 +37,13 @@ namespace onion
 	{
 	  public:
 		/// @brief Subscribes a handler to the event. The handler will be invoked with the specified EventArgs when the event is triggered.
-		/// The returned EventHandler is used as a token to manage the subscription's lifecycle.
+		/// The returned EventHandle is used as a token to manage the subscription's lifecycle.
 		/// @param handler The handler function to be invoked when the event is triggered.
-		/// @return An EventHandler that is used to manage the subscription's lifecycle.
-		[[nodiscard]] EventHandler Subscribe(const std::function<void(const EventArgs&)>& handler)
+		/// @return An EventHandle that is used to manage the subscription's lifecycle.
+		[[nodiscard]] EventHandle Subscribe(const std::function<void(const EventArgs&)>& handler)
 		{
-			// Store the handler with a weak pointer to the handler ID
-			std::shared_ptr<EventHandler::Token> tokenPtr = std::make_shared<EventHandler::Token>();
+			// Store the handle with a weak pointer to the handle ID
+			std::shared_ptr<EventHandle::Token> tokenPtr = std::make_shared<EventHandle::Token>();
 
 			// Lock the mutex to safely modify the handlers vector
 			{
@@ -54,22 +54,22 @@ namespace onion
 			// Clear expired handlers to keep the handlers vector clean
 			ClearExpired();
 
-			return EventHandler(tokenPtr);
+			return EventHandle(tokenPtr);
 		}
 
-		/// @brief Unsubscribes a handler from the event using the provided EventHandler.
-		/// @param eventHandler The EventHandler representing the subscription to be removed.
-		void Unsubscribe(const EventHandler& eventHandler)
+		/// @brief Unsubscribes a handle from the event using the provided EventHandle.
+		/// @param eventHandle The EventHandle representing the subscription to be removed.
+		void Unsubscribe(const EventHandle& eventHandle)
 		{
-			// Extract the handler ID from the EventHandler
-			std::shared_ptr<EventHandler::Token> handlerId = eventHandler.m_handler;
+			// Extract the handle ID from the EventHandle
+			std::shared_ptr<EventHandle::Token> handleId = eventHandle.m_handle;
 
-			// Remove the handler with the matching ID
+			// Remove the handle with the matching ID
 			std::lock_guard<std::mutex> lock(m_mutex);
 			m_handlers.erase(std::remove_if(m_handlers.begin(),
 											m_handlers.end(),
-											[handlerId](const auto& tuple)
-											{ return std::get<0>(tuple).lock() == handlerId; }),
+											[handleId](const auto& tuple)
+											{ return std::get<0>(tuple).lock() == handleId; }),
 							 m_handlers.end());
 		}
 
@@ -78,7 +78,7 @@ namespace onion
 		void Trigger(const EventArgs& args) const
 		{
 			// Create a temporary copy of the handlers to avoid holding the lock while invoking them
-			std::vector<std::tuple<std::weak_ptr<EventHandler::Token>, std::function<void(const EventArgs&)>>>
+			std::vector<std::tuple<std::weak_ptr<EventHandle::Token>, std::function<void(const EventArgs&)>>>
 				tmpHandlers;
 			{
 				std::lock_guard<std::mutex> lock(m_mutex);
@@ -86,9 +86,9 @@ namespace onion
 			}
 
 			// Invoke handlers outside the lock to prevent potential deadlocks
-			for (const auto& [handlerId, handler] : tmpHandlers)
+			for (const auto& [handleId, handler] : tmpHandlers)
 			{
-				if (auto lockedHandlerId = handlerId.lock())
+				if (auto lockedHandleId = handleId.lock())
 				{
 					handler(args);
 				}
@@ -116,7 +116,7 @@ namespace onion
 		/// @brief Mutex to protect access to the handlers vector, ensuring thread safety when subscribing, unsubscribing, and triggering events.
 		mutable std::mutex m_mutex;
 
-		/// @brief Storage for event handlers, using a weak pointer to the handler ID to allow for automatic cleanup when handlers are unsubscribed or go out of scope.
-		std::vector<std::tuple<std::weak_ptr<EventHandler::Token>, std::function<void(const EventArgs&)>>> m_handlers;
+		/// @brief Storage for event handlers, using a weak pointer to the handle ID to allow for automatic cleanup when handlers are unsubscribed or go out of scope.
+		std::vector<std::tuple<std::weak_ptr<EventHandle::Token>, std::function<void(const EventArgs&)>>> m_handlers;
 	};
 } // namespace onion
